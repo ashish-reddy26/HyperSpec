@@ -99,6 +99,7 @@ def post_process(mask, min_size=80, area_threshold=0.1):
 
     return mask2
 
+# --------------------------------------------------------------------------------------------------------#``
 
 # def viz(final_mask, hypercube, filename, random_band=45):
 def viz(final_mask, hypercube, random_band=2):
