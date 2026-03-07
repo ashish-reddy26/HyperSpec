@@ -1,5 +1,7 @@
-import cuvis
 import numpy as np
+import argparse
+import cuvis
+import os
 
 def extract_reflectance_cube(session_filename):
     '''
@@ -35,7 +37,6 @@ def extract_reflectance_cube(session_filename):
     print("Extracting scaled integer cube to numpy array...")
     integer_cube = processed_measurement.cube.to_numpy()
 
-    # --- THIS IS THE NEW, FINAL STEP ---
     # 7. CONVERT TO FLOATING POINT REFLECTANCE
     print("Converting to float and scaling by 10000.0...")
     reflectance_cube = integer_cube.astype(np.float32) / 10000.0
@@ -47,3 +48,22 @@ def extract_reflectance_cube(session_filename):
     print(f"Final data type: {reflectance_cube.dtype}")
 
     return reflectance_cube
+
+def run(cuvis_session_file, np_dest_location):
+    
+    reflectance = extract_reflectance_cube(cuvis_session_file)
+    np.save(np_dest_location, reflectance)
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input', action='str', 
+                        help = 'Path to session file.', required=True)
+    parser.add_argument('--output', action='str', 
+                        help = 'Output NumPy file destination.', required=True)
+    
+    args = parser.parse_args()
+    
+    run(args.input, args.output)
+    
