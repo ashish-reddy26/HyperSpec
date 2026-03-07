@@ -1,6 +1,18 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+class Utilities:
+
+    def __init__(self) -> None:
+        pass
+
+    def random():
+        pass
+
+
+
+
 class QtPixelPicker:
     """
     Interactive Qt tool to select object and background pixels in one window.
@@ -66,3 +78,5 @@ def run(my_hypercube, display_band=50):
     print(f"Final feature matrix shape for SVM: {X.shape}")
 
     return X, y
+
+

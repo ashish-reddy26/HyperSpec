@@ -1,41 +1,21 @@
 ### HyperSpec
 
-`utils/extract_reflectance.py`: Provide paths to CUVIS session file and the destination file for NumPy that stores the reflectance data.
-
-
-* Example: `python utils/extract_reflectance.py --input path/to/session.cu3s --output dest/path/to/numpy/file.npy`
-
-
-`seg_utils.py`: 
+In the notebook `cube.ipynb` the required cells contain the cell number as `CELL{2}`
 
 ```
-1. We should have the reflectance already as numpy files, extracted from previous step `extract_reflectance.py`.
-
-2. Now, we need to load a numpy file - need to get the object pixels and background pixels.
-
-3. Once it is done, train an SVM classifier with those selected pixels as they will automatically store the reflectance data at each selected pixel location (both the object and the background).
-
-4. Once trainign is completed the Visualize the SVM mask, to validate the performance and/or to verify if there is any noise in predicted mask.
-
-5. If there is no noise, we are good to use the mask, if not we need to post-process the mask to remove the noise.
-
-6. Once we get the final mask, visualize to confirm.
-
-------------------------------
-custom adoption for lima beans
-------------------------------
-
-7. Now split the beans based on the y-axis, so that we get the upper and lower beans' mask separately.
-    - the final output contains 2 items, first one being the cube and the second one is the correponding mask.
-
-8. Now obtain the average reflectanc of each object and create a list of average reflectances for each object.
-
-9. Finally save the average ref values of each object at available bands as rows of a dataframe.
-
-10. Now we obtain the cube for each object, as we have the reflectance (numpy-file) and svm-masks for upper and lower beans, we can process them separately to obtain their beans.
-
-11. Save the final extrcated cubes of each bean in the result folder.
-
-12. The dataframe and these individual bean cubes are the final expected outputs.
-
+1. `CELL1` Update the location of  reflectance numpy file `reflectance_np_file and run`
+2. `CELL2` Run it.
+3. `CELL3` Data extraction - once we run this cell, a window pops up with a the image.
+    - Here select the `bean` pixels with left-click, we should be able to see a `red color X mark` 
+    - Select background pixels using the right-click, it shows `blue color circle`
+    - Make sure there is atleast one pixel selected for each bean please refer to this image for reg=ference
+4. `CELL4` Train an SVM classifier and displays the resultant mask.
+    - look for any noise pixels in the background region
+5. `CELL5` The post-process should clean the noise, if any, adjust the `max_size` accordingly
+6. `CELL6` When you run this cell, a pop window appears, select a pixel where this its `y` coordinate should be able to separate the upper and lower beans 
+7. `CELL7` Once we got the `y coordinate` run this to save the following results:
+    - Overall binary mask as NumPy file
+    - overall mean reflectance of each bean for all the available bands as CSV
+    - Saves reflectance cubes for each bean as NumPy
+    
 ```
