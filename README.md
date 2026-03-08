@@ -3,7 +3,7 @@
 This project uses Conda to manage the core data science dependencies and PIP for hardware-specific SDK wrappers.
 
 **1. Build the base environment**
-This installs the required Python version and all public data science libraries (NumPy, Scikit-Learn, Matplotlib, etc.).
+This installs the required Python version and required libraries.
 ```bash
 conda env create -f environment.yml
 conda activate hyperspec
