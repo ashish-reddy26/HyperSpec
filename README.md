@@ -10,8 +10,7 @@ conda activate hyperspec
 ```
 
 
-
-
+## Interactive Data Processing (`cube.ipynb`)
 
 Follow the steps below to extract data, train the SVM, and process the bean reflectance cubes. Ensure you run the cells in order.
 
