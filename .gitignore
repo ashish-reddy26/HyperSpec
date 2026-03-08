@@ -6,3 +6,4 @@ data/
 *.npy
 *.cu3s
 process.py
+requirement_hardware.txt
