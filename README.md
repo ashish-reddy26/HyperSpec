@@ -1,8 +1,8 @@
-## Environment Setup
+## 1. Environment Setup
 
 This project uses Conda to manage the core data science dependencies and PIP for hardware-specific SDK wrappers.
 
-**1. Build the base environment**
+**Build the base environment**
 This installs the required Python version and required libraries.
 ```bash
 conda env create -f environment.yml
@@ -10,7 +10,7 @@ conda activate hyperspec
 ```
 
 
-## Interactive Data Processing (`cube.ipynb`)
+## 2. Interactive Data Processing (`cube.ipynb`)
 
 Follow the steps below to extract data, train the SVM, and process the bean reflectance cubes. Ensure you run the cells in order.
 
