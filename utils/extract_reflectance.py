@@ -52,15 +52,26 @@ def extract_reflectance_cube(session_filename):
 def run(cuvis_session_file, np_dest_location):
     
     reflectance = extract_reflectance_cube(cuvis_session_file)
+
+    # 1. Extract ONLY the folder path (e.g., 'results/reflectance_data')
+    parent_folder = os.path.dirname(np_dest_location)
+
+    # 2. Check if there is a parent folder, and create it if it doesn't exist
+    if parent_folder:
+        # exist_ok=True means it won't crash if the folder is already there!
+        os.makedirs(parent_folder, exist_ok=True)
+        
+    # os.makedirs(np_dest_location, exist_ok=True)
     np.save(np_dest_location, reflectance)
 
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', action='str', 
+    parser.add_argument('--input', 
                         help = 'Path to session file.', required=True)
-    parser.add_argument('--output', action='str', 
+    
+    parser.add_argument('--output', 
                         help = 'Output NumPy file destination.', required=True)
     
     args = parser.parse_args()

@@ -1,21 +1,17 @@
-### HyperSpec
+### Data Processing Workflow (`cube.ipynb`)
 
-In the notebook `cube.ipynb` the required cells contain the cell number as `CELL{2}`
+Follow the steps below to extract data, train the SVM, and process the bean reflectance cubes. Ensure you run the cells in order.
 
-```
-1. `CELL1` Update the location of  reflectance numpy file `reflectance_np_file and run`
-2. `CELL2` Run it.
-3. `CELL3` Data extraction - once we run this cell, a window pops up with a the image.
-    - Here select the `bean` pixels with left-click, we should be able to see a `red color X mark` 
-    - Select background pixels using the right-click, it shows `blue color circle`
-    - Make sure there is atleast one pixel selected for each bean please refer to this image for reg=ference
-4. `CELL4` Train an SVM classifier and displays the resultant mask.
-    - look for any noise pixels in the background region
-5. `CELL5` The post-process should clean the noise, if any, adjust the `max_size` accordingly
-6. `CELL6` When you run this cell, a pop window appears, select a pixel where this its `y` coordinate should be able to separate the upper and lower beans 
-7. `CELL7` Once we got the `y coordinate` run this to save the following results:
-    - Overall binary mask as NumPy file
-    - overall mean reflectance of each bean for all the available bands as CSV
-    - Saves reflectance cubes for each bean as NumPy
-    
-```
+1. **`CELL1` (Setup):** Update the `reflectance_np_file` variable with the exact path to your reflectance NumPy file.
+2. **`CELL2` (Load):** Run this cell to load the hyperspectral array into memory.
+3. **`CELL3` (Interactive Data Extraction):** Running this cell will open a new pop-up window displaying the image.
+   * **Left-click** to select **Bean** pixels (marks them with a red `X`).
+   * **Right-click** to select **Background** pixels (marks them with a blue `O`).
+   * *Note:* Ensure you select at least one pixel for every bean. Close the window when finished.
+4. **`CELL4` (Train SVM):** Trains the SVM classifier based on your selections and displays the resulting mask. Inspect this visual output for any stray noise pixels in the background.
+5. **`CELL5` (Post-Process):** Cleans up isolated noise from the mask. If you still see noise, adjust the `max_size` parameter and re-run.
+6. **`CELL6` (Set Dividing Line):** A new window will appear showing Band 70. Click exactly once between the upper and lower beans to set the `Y` coordinate that divides them. The window will close automatically.
+7. **`CELL7` (Save Results):** Run this final cell to process and save the following files to your `results/` directory:
+   * The overall binary mask (`full_mask.npy`).
+   * The mean reflectance of each bean across all bands (`per_object_reflectance.csv`).
+   * Isolated reflectance cubes for each individual bean (`object_XX_upper/lower.npy`).

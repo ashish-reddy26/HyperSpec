@@ -2,3 +2,6 @@
 processed_objects/
 results/
 track.md
+data/
+*.npy
+*.cu3s
