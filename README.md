@@ -1,4 +1,17 @@
-### Data Processing Workflow (`cube.ipynb`)
+## Environment Setup
+
+This project uses Conda to manage the core data science dependencies and PIP for hardware-specific SDK wrappers.
+
+**1. Build the base environment**
+This installs the required Python version and all public data science libraries (NumPy, Scikit-Learn, Matplotlib, etc.).
+```bash
+conda env create -f environment.yml
+conda activate hyperspec
+```
+
+
+
+
 
 Follow the steps below to extract data, train the SVM, and process the bean reflectance cubes. Ensure you run the cells in order.
 
@@ -14,4 +27,4 @@ Follow the steps below to extract data, train the SVM, and process the bean refl
 7. **`CELL7` (Save Results):** Run this final cell to process and save the following files to your `results/` directory:
    * The overall binary mask (`full_mask.npy`).
    * The mean reflectance of each bean across all bands (`per_object_reflectance.csv`).
-   * Isolated reflectance cubes for each individual bean (`object_XX_upper/lower.npy`).
+   * Isolated reflectance cubes for each individual bean (`object_XX_upper.npy` / `object_XX_lower.npy`).
