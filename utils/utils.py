@@ -2,17 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-class Utilities:
-
-    def __init__(self) -> None:
-        pass
-
-    def random():
-        pass
-
-
-
-
 class QtPixelPicker:
     """
     Interactive Qt tool to select object and background pixels in one window.
