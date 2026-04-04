@@ -1,84 +1,110 @@
-import matplotlib.pyplot as plt
 import numpy as np
+import spectral.io.envi as envi
 
-class QtLinePicker:
-    """
-    Interactive Qt tool to set a horizontal dividing line with a single click.
-    """
-    def __init__(self, hypercube, display_band=70):
-        self.display_band = hypercube[:, :, display_band]
-        self.split_y = None
-        
-        self.fig, self.ax = plt.subplots(figsize=(8, 6))
-        # Using a grayscale colormap often helps see boundaries better
-        self.ax.imshow(self.display_band, cmap='gray') 
-        self.ax.set_title("Click ONCE between the upper and lower objects.\nWindow will close automatically.")
-        
-        self.cid = self.fig.canvas.mpl_connect('button_press_event', self._onclick)
-
-    def _onclick(self, event):
-        if event.inaxes != self.ax:
-            return
-            
-        # Capture the Y-coordinate of the click
-        self.split_y = int(event.ydata)
-        
-        # Automatically close the window after the click
-        plt.close(self.fig)
-
-    def get_y(self):
-        """Opens the Qt window and blocks until clicked."""
-        plt.show(block=True) 
-        return self.split_y
+def load_spectral_cube(header_file, bin_spectral_file):
     
+    image_cube = envi.open(header_file, bin_spectral_file)
+    
+    # load cube as array
+    hypercube_arr = np.array(image_cube.load())
+    
+    # replace NaN values with 0s
+    final_cube_arr = np.nan_to_num(hypercube_arr, nan=0.0)
 
-import cuvis
+    return final_cube_arr, image_cube
+
+import os
 import numpy as np
+import pandas as pd
+from skimage.measure import label, regionprops
+from PIL import Image
 
-def extract_reflectance_cube(session_filename):
-    '''
-    This function takes the session file ending with the extension '.cu3s' and processes RAW binary data into Reflectance data, 
-    then scales the reflectance values to 0-1 as their actual values are unint16 ranging from 0 to >10000
-    The processing  context is the key, which helps us set the processing mode which will be given as a processing argument to teh context.
-    '''
+import os
+import numpy as np
+import pandas as pd
+from skimage.measure import label, regionprops
+from PIL import Image
 
-    # 1. Path to session file
-    # session_filename = "data/cuvis_files/sam_17.cu3s"
-    if session_filename == '':
-        raise FileNotFoundError
+def get_biochar_reflectance(hypercube, mask, output_dir="processed_objects"):
+    """
+    Saves the full mask as a PNG image, extracts average reflectance per object into a DataFrame 
+    using wavelength columns (900 to 1700, step 4), 
+    and saves isolated .npy cubes with np.nan backgrounds.
+    """
+    os.makedirs(output_dir, exist_ok=True)
 
-    # 2. LOAD THE RAW MEASUREMENT
-    print("Loading session file...")
-    session_file = cuvis.SessionFile(session_filename)
-    raw_measurement = session_file.get_measurement(0)
+    # 1. Save the overall 2D mask as a PNG image (NOT a numpy array)
+    mask_uint8 = (mask * 255).astype(np.uint8)
+    Image.fromarray(mask_uint8).save(os.path.join(output_dir, "mask.png"))
+    print("Saved mask as PNG.")
 
-    # 3. CREATE A PROCESSING CONTEXT
-    print("Loading processing context from session file...")
-    processing_context = cuvis.ProcessingContext(session_file)
+    labeled_mask = label(mask)
+    regions = regionprops(labeled_mask)
+    
+    print(f"Found {len(regions)} distinct objects. Processing...")
 
-    # 4. SET THE DESIRED PROCESSING MODE
-    proc_args = cuvis.ProcessingArgs()
-    proc_args.processing_mode = cuvis.ProcessingMode.Reflectance
-    processing_context.set_processing_args(proc_args)
+    # Generate the wavelength array: 900 to 1700 (inclusive) with a step of 4
+    wavelengths = np.arange(900, 1704, 4)
 
-    # 5. APPLY THE PROCESSING
-    print("Applying processing to create reflectance data...")
-    processed_measurement = processing_context.apply(raw_measurement)
+    # List to hold the dictionary rows for our Pandas DataFrame
+    all_object_averages = []
 
-    # 6. EXTRACT THE INTEGER CUBE
-    print("Extracting scaled integer cube to numpy array...")
-    integer_cube = processed_measurement.cube.to_numpy()
+    for i, region in enumerate(regions):
+        object_id = f"object_{i+1:02d}"
+        
+        # Get the bounding box and crop
+        min_y, min_x, max_y, max_x = region.bbox
+        cropped_cube = hypercube[min_y:max_y, min_x:max_x, :]
+        
+        # Create a boolean mask for JUST this object within its bounding box
+        cropped_mask = labeled_mask[min_y:max_y, min_x:max_x] == (i + 1)
+        
+        # Extract ONLY the True pixels
+        true_object_pixels = cropped_cube[cropped_mask] 
+        
+        # Calculate the average reflectance for each band
+        mean_reflectance = np.mean(true_object_pixels, axis=0)
+        
+        # Build the row dictionary: ID, then Wavelengths
+        row_data = {'Object_ID': object_id}
+        for band_idx, refl_val in enumerate(mean_reflectance):
+            # Map the calculated average to the specific wavelength column
+            if band_idx < len(wavelengths):
+                row_data[f'{wavelengths[band_idx]}'] = refl_val
+            
+        all_object_averages.append(row_data)
+        
+        # Eliminating Bounding Box Background
+        # Cast to float so we can use np.nan for the background pixels
+        cropped_cube_isolated = cropped_cube.astype(float) 
+        cropped_cube_isolated[~cropped_mask] = np.nan 
+        
+        # 2. Save the individual reflectance numpy file
+        filename = f"{object_id}.npy"
+        np.save(os.path.join(output_dir, filename), cropped_cube_isolated)
+        
+        # (Optional) If you also want to save the individual cropped masks as PNGs, uncomment below:
+        # cropped_mask_uint8 = (cropped_mask * 255).astype(np.uint8)
+        # Image.fromarray(cropped_mask_uint8).save(os.path.join(output_dir, f"{object_id}_mask.png"))
 
-    # --- THIS IS THE NEW, FINAL STEP ---
-    # 7. CONVERT TO FLOATING POINT REFLECTANCE
-    print("Converting to float and scaling by 10000.0...")
-    reflectance_cube = integer_cube.astype(np.float32) / 10000.0
+    # Build the final CSV with rows = objects, columns = wavelengths
+    df_averages = pd.DataFrame(all_object_averages)
+    df_averages.to_csv(os.path.join(output_dir, "per_object_reflectance.csv"), index=False)
+    
+    print(f"Successfully saved {len(regions)} individual reflectance cubes, the full mask image, and the reflectance CSV.")
 
-    # clipping the reflectance values to 0-1, as there were a few outliers >1.0, which is technically not allowed wrt reflectance values
-    reflectance_cube = np.clip(reflectance_cube, 0, 1.0)
 
-    # 8. VERIFY AND VISUALIZE
-    print(f"Final data type: {reflectance_cube.dtype}")
+class TrainUtils:
 
-    return reflectance_cube
+    def __init__(self) -> None:
+        pass
+
+    def point_picker():
+        pass
+
+    def train_svm():
+        pass
+
+    def predict_svm():
+        pass
 
